@@ -1,0 +1,1166 @@
+<!DOCTYPE html>
+<html lang="id" class="h-full bg-slate-50">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kuis Interaktif: Konversi Pecahan, Desimal, & Persen</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- KaTeX for Math Rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #f8fafc;
+        }
+        .katex { font-size: 1.15em !important; }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="h-full text-slate-800 flex flex-col antialiased selection:bg-indigo-500 selection:text-white">
+
+    <!-- Top Navigation & Global Header -->
+    <header class="bg-indigo-700 text-white shadow-lg sticky top-0 z-30">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center space-x-3">
+                <div class="p-2.5 bg-indigo-600/80 rounded-xl ring-1 ring-white/20 shadow-inner">
+                    <i data-lucide="calculator" class="w-6 h-6 text-amber-300"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg sm:text-xl font-bold tracking-tight leading-tight">Kuis Konversi Matematika</h1>
+                    <p class="text-xs text-indigo-200">Bilangan Rasional: Pecahan, Desimal, & Persen (30 Soal)</p>
+                </div>
+            </div>
+
+            <!-- Stats Bar -->
+            <div class="flex items-center gap-3 sm:gap-6 text-sm">
+                <!-- Realtime Autosave Badge -->
+                <div id="save-status" class="hidden sm:flex items-center space-x-1.5 text-xs bg-indigo-800/80 px-3 py-1.5 rounded-full text-indigo-100 border border-indigo-500/30">
+                    <i data-lucide="hard-drive" class="w-3.5 h-3.5 text-emerald-400"></i>
+                    <span>Tersimpan Otomatis</span>
+                </div>
+
+                <!-- Score Counter -->
+                <div class="bg-indigo-800/90 px-3.5 py-1.5 rounded-xl border border-indigo-500/40 flex items-center space-x-2">
+                    <i data-lucide="award" class="w-4 h-4 text-amber-300"></i>
+                    <span class="text-xs text-indigo-200 font-medium">Skor:</span>
+                    <span id="header-score" class="font-extrabold text-amber-300">0</span>
+                </div>
+
+                <!-- Progress Counter -->
+                <div class="bg-indigo-800/90 px-3.5 py-1.5 rounded-xl border border-indigo-500/40 flex items-center space-x-2">
+                    <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400"></i>
+                    <span id="header-progress" class="font-bold">0 / 30</span>
+                </div>
+
+                <!-- Reset Modal Trigger Button -->
+                <button onclick="openResetModal()" title="Ulangi Kuis dari Awal" class="p-2 bg-indigo-600 hover:bg-rose-600 text-white rounded-xl transition shadow border border-indigo-500/30 flex items-center">
+                    <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Global Progress Bar -->
+        <div class="w-full bg-indigo-950/40 h-1.5">
+            <div id="top-progress-bar" class="bg-gradient-to-r from-amber-400 to-emerald-400 h-1.5 transition-all duration-300 w-0"></div>
+        </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-grow w-full grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- LEFT PANEL: QUESTION NAVIGATOR GRID (Mobile Toggle / Desktop Sidebar) -->
+        <aside class="lg:col-span-4 order-2 lg:order-1 space-y-4">
+            
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/80 sticky top-20">
+                
+                <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+                    <div class="flex items-center space-x-2">
+                        <i data-lucide="layout-grid" class="w-5 h-5 text-indigo-600"></i>
+                        <h2 class="font-bold text-slate-800 text-base">Navigasi Soal</h2>
+                    </div>
+                    <span id="answered-count-badge" class="text-xs font-bold px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-lg">
+                        0 Selesai
+                    </span>
+                </div>
+
+                <!-- Filter Tabs for Navigation -->
+                <div class="flex gap-1 mb-4 p-1 bg-slate-100 rounded-xl text-xs font-semibold">
+                    <button onclick="setGridFilter('all')" id="filter-all" class="flex-1 py-1.5 rounded-lg bg-white text-slate-800 shadow-sm transition">Semua</button>
+                    <button onclick="setGridFilter('unanswered')" id="filter-unanswered" class="flex-1 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition">Belum</button>
+                    <button onclick="setGridFilter('story')" id="filter-story" class="flex-1 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition">Cerita</button>
+                    <button onclick="setGridFilter('direct')" id="filter-direct" class="flex-1 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition">Langsung</button>
+                </div>
+
+                <!-- 30 Buttons Grid -->
+                <div id="question-grid" class="grid grid-cols-5 sm:grid-cols-6 lg:grid-cols-5 gap-2 max-h-[360px] overflow-y-auto custom-scrollbar p-1">
+                    <!-- Grid items injected by JS -->
+                </div>
+
+                <!-- Grid Status Legend -->
+                <div class="mt-5 pt-4 border-t border-slate-100 grid grid-cols-2 gap-2 text-xs font-medium text-slate-600">
+                    <div class="flex items-center space-x-2">
+                        <span class="w-3 h-3 rounded-full bg-slate-200 border border-slate-300"></span>
+                        <span>Belum Diisi</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
+                        <span>Jawaban Benar</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <span class="w-3 h-3 rounded-full bg-rose-500"></span>
+                        <span>Jawaban Salah</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <span class="w-3 h-3 rounded-full bg-indigo-600 ring-2 ring-indigo-300"></span>
+                        <span>Sedang Dilihat</span>
+                    </div>
+                </div>
+
+                <!-- Quick Finish / Overview Button -->
+                <button onclick="openSummaryModal()" class="w-full mt-5 bg-slate-900 hover:bg-slate-800 text-white font-bold py-2.5 px-4 rounded-xl transition text-sm flex items-center justify-center space-x-2 shadow">
+                    <i data-lucide="bar-chart-3" class="w-4 h-4 text-indigo-400"></i>
+                    <span>Lihat Rangkuman Hasil</span>
+                </button>
+
+            </div>
+
+        </aside>
+
+        <!-- RIGHT PANEL: QUESTION DISPLAY CARD -->
+        <section class="lg:col-span-8 order-1 lg:order-2 space-y-4">
+
+            <!-- Question Card -->
+            <div class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200/80 relative min-h-[480px] flex flex-col justify-between">
+                
+                <div>
+                    <!-- Question Header Info -->
+                    <div class="flex flex-wrap items-center justify-between gap-2 mb-6">
+                        <div class="flex items-center space-x-2">
+                            <span id="q-number-badge" class="bg-indigo-600 text-white font-extrabold text-sm px-3 py-1 rounded-xl shadow-sm">
+                                Soal 1
+                            </span>
+                            <span id="q-type-badge" class="bg-amber-100 text-amber-900 text-xs font-bold px-3 py-1 rounded-xl border border-amber-200/60 flex items-center space-x-1">
+                                <i data-lucide="book-open-text" class="w-3.5 h-3.5"></i>
+                                <span>Soal Cerita</span>
+                            </span>
+                        </div>
+
+                        <!-- Status Indicators -->
+                        <div id="q-status-tag" class="text-xs font-bold px-3 py-1 rounded-full bg-slate-100 text-slate-600 flex items-center space-x-1">
+                            <i data-lucide="clock" class="w-3.5 h-3.5"></i>
+                            <span>Belum dijawab</span>
+                        </div>
+                    </div>
+
+                    <!-- Question Text Container -->
+                    <div class="mb-8">
+                        <div id="q-text" class="text-slate-800 text-lg sm:text-xl font-medium leading-relaxed">
+                            <!-- Question rendered here -->
+                        </div>
+                    </div>
+
+                    <!-- Options Grid -->
+                    <div id="options-container" class="space-y-3">
+                        <!-- 4 Options (A, B, C, D) dynamically generated -->
+                    </div>
+
+                    <!-- Feedback & Explanation Panel (Appears instantly on answering) -->
+                    <div id="explanation-panel" class="hidden mt-6 p-5 rounded-2xl border transition-all duration-300">
+                        <div class="flex items-start space-x-3">
+                            <div id="exp-icon-box" class="p-2 rounded-xl text-white shrink-0 mt-0.5">
+                                <i id="exp-icon" data-lucide="check" class="w-5 h-5"></i>
+                            </div>
+                            <div class="space-y-2 flex-grow">
+                                <div class="flex items-center justify-between">
+                                    <h3 id="exp-title" class="font-bold text-base">Pembahasan</h3>
+                                    <span id="exp-badge" class="text-xs font-bold px-2.5 py-0.5 rounded-full"></span>
+                                </div>
+                                <div id="exp-content" class="text-sm leading-relaxed text-slate-700">
+                                    <!-- Detailed step-by-step solution rendered here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Question Navigation Control Buttons -->
+                <div class="mt-8 pt-5 border-t border-slate-100 flex items-center justify-between gap-3">
+                    <button onclick="prevQuestion()" id="btn-prev" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition flex items-center space-x-2 text-sm disabled:opacity-40 disabled:cursor-not-allowed">
+                        <i data-lucide="chevron-left" class="w-4 h-4"></i>
+                        <span>Sebelumnya</span>
+                    </button>
+
+                    <span class="text-xs font-semibold text-slate-400 hidden sm:inline">
+                        Gunakan tombol panah atau navigasi grid
+                    </span>
+
+                    <button onclick="nextQuestion()" id="btn-next" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition flex items-center space-x-2 text-sm shadow">
+                        <span>Berikutnya</span>
+                        <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                    </button>
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- MODAL: SUMMARY & FINAL REPORT -->
+    <div id="summary-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto custom-scrollbar space-y-6">
+            
+            <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+                <div class="flex items-center space-x-3">
+                    <div class="p-3 bg-amber-100 text-amber-800 rounded-2xl">
+                        <i data-lucide="trophy" class="w-7 h-7"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-bold text-slate-900">Rangkuman Hasil Latihan</h2>
+                        <p class="text-xs text-slate-500">Hasil pengerjaan kuis konversi pecahan & desimal</p>
+                    </div>
+                </div>
+                <button onclick="closeSummaryModal()" class="p-2 text-slate-400 hover:text-slate-600 rounded-xl hover:bg-slate-100 transition">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <!-- Score Stats Overview Grid -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div class="bg-indigo-50 border border-indigo-100 p-4 rounded-2xl text-center">
+                    <span class="text-xs text-indigo-600 font-bold block uppercase tracking-wider mb-1">Total Skor</span>
+                    <span id="modal-score" class="text-3xl font-black text-indigo-700">0</span>
+                    <span class="text-xs text-indigo-500 block font-medium">dari 100</span>
+                </div>
+                <div class="bg-emerald-50 border border-emerald-100 p-4 rounded-2xl text-center">
+                    <span class="text-xs text-emerald-600 font-bold block uppercase tracking-wider mb-1">Benar</span>
+                    <span id="modal-correct" class="text-3xl font-black text-emerald-600">0</span>
+                    <span class="text-xs text-emerald-500 block font-medium">Soal</span>
+                </div>
+                <div class="bg-rose-50 border border-rose-100 p-4 rounded-2xl text-center">
+                    <span class="text-xs text-rose-600 font-bold block uppercase tracking-wider mb-1">Salah</span>
+                    <span id="modal-wrong" class="text-3xl font-black text-rose-600">0</span>
+                    <span class="text-xs text-rose-500 block font-medium">Soal</span>
+                </div>
+                <div class="bg-slate-50 border border-slate-200 p-4 rounded-2xl text-center">
+                    <span class="text-xs text-slate-500 font-bold block uppercase tracking-wider mb-1">Belum Diisi</span>
+                    <span id="modal-unanswered" class="text-3xl font-black text-slate-700">30</span>
+                    <span class="text-xs text-slate-400 block font-medium">Soal</span>
+                </div>
+            </div>
+
+            <!-- Category Performance Breakdown -->
+            <div class="bg-slate-50 p-4 rounded-2xl space-y-3 border border-slate-200/80">
+                <h3 class="font-bold text-sm text-slate-800">Akurasi Berdasarkan Kategori Soal:</h3>
+                
+                <div class="space-y-2 text-xs">
+                    <div>
+                        <div class="flex justify-between font-semibold text-slate-700 mb-1">
+                            <span>Soal Langsung (15 Soal)</span>
+                            <span id="perf-direct-text">0/15 (0%)</span>
+                        </div>
+                        <div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+                            <div id="perf-direct-bar" class="bg-indigo-600 h-2 rounded-full w-0 transition-all duration-500"></div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between font-semibold text-slate-700 mb-1">
+                            <span>Soal Cerita (15 Soal)</span>
+                            <span id="perf-story-text">0/15 (0%)</span>
+                        </div>
+                        <div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+                            <div id="perf-story-bar" class="bg-amber-500 h-2 rounded-full w-0 transition-all duration-500"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="modal-feedback-message" class="p-4 rounded-2xl text-sm font-medium text-center">
+                <!-- Encouragement text -->
+            </div>
+
+            <div class="flex flex-wrap gap-3 pt-2">
+                <button onclick="closeSummaryModal()" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold py-3 px-4 rounded-xl transition text-sm">
+                    Lanjutkan Mengerjakan
+                </button>
+                <button onclick="openResetModal()" class="flex-1 bg-rose-600 hover:bg-rose-700 text-white font-bold py-3 px-4 rounded-xl transition text-sm shadow">
+                    Ulangi dari Awal
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- MODAL: CONFIRM RESET -->
+    <div id="reset-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 space-y-5 text-center">
+            <div class="w-12 h-12 bg-rose-100 text-rose-600 rounded-2xl flex items-center justify-center mx-auto">
+                <i data-lucide="alert-triangle" class="w-6 h-6"></i>
+            </div>
+            <div>
+                <h3 class="text-lg font-bold text-slate-900">Reset Semua Progress?</h3>
+                <p class="text-xs text-slate-500 mt-1">
+                    Semua jawaban yang tersimpan di browser akan dihapus dan kuis akan dimulai kembali dari nomor 1.
+                </p>
+            </div>
+            <div class="flex gap-3 pt-2">
+                <button onclick="closeResetModal()" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2.5 px-4 rounded-xl text-sm transition">
+                    Batal
+                </button>
+                <button onclick="confirmResetQuiz()" class="flex-1 bg-rose-600 hover:bg-rose-700 text-white font-bold py-2.5 px-4 rounded-xl text-sm transition shadow">
+                    Ya, Reset Kuis
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 30 Complete Questions Dataset (No arithmetic operations, pure conversions & representations)
+        // Balanced answer keys across A, B, C, D
+        const questionsData = [
+            {
+                id: 1,
+                type: 'direct',
+                typeLabel: 'Soal Langsung',
+                question: 'Ubah pecahan $\\frac{4}{25}$ ke dalam bentuk desimal!',
+                options: [
+                    { key: 'A', text: '$0,12$' },
+                    { key: 'B', text: '$0,16$' },
+                    { key: 'C', text: '$0,24$' },
+                    { key: 'D', text: '$0,40$' }
+                ],
+                correctKey: 'B',
+                explanation: 'Ubah penyebut menjadi 100 dengan mengalikan pembilang dan penyebut dengan 4:<br>$$\\frac{4}{25} = \\frac{4 \\times 4}{25 \\times 4} = \\frac{16}{100} = 0,16$$'
+            },
+            {
+                id: 2,
+                type: 'story',
+                typeLabel: 'Soal Cerita',
+                question: 'Dari 50 siswa angkatan Kelas 7, sebanyak 18 siswa mengikuti ekstrakurikuler pramuka. Nyatakan bagian siswa yang mengikuti pramuka dalam bentuk desimal!',
+                options: [
+                    { key: 'A', text: '$0,18$' },
+                    { key: 'B', text: '$0,25$' },
+                    { key: 'C', text: '$0,30$' },
+                    { key: 'D', text: '$0,36$' }
+                ],
+                correctKey: 'D',
+                explanation: 'Pecahan bagian siswa pramuka adalah $\\frac{18}{50}$. Ubah ke desimal dengan mengalikan 2:<br>$$\\frac{18}{50} = \\frac{18 \\times 2}{50 \\times 2} = \\frac{36}{100} = 0,36$$'
+            },
+            {
+                id: 3,
+                type: 'direct',
+                typeLabel: 'Soal Langsung',
+                question: 'Bentuk persen dari pecahan campuran $1\\frac{3}{5}$ adalah ...',
+                options: [
+                    { key: 'A', text: '$160\\%$' },
+                    { key: 'B', text: '$135\\%$' },
+                    { key: 'C', text: '$150\\%$' },
+                    { key: 'D', text: '$130\\%$' }
+                ],
+                correctKey: 'A',
+                explanation: '1) Ubah pecahan campuran ke pecahan biasa: $1\\frac{3}{5} = \\frac{(1 \\times 5) + 3}{5} = \\frac{8}{5}$<br>2) Kalikan dengan $100\\%$:<br>$$\\frac{8}{5} \\times 100\\% = 8 \\times 20\\% = 160\\%$$'
+            },
+            {
+                id: 4,
+                type: 'story',
+                typeLabel: 'Soal Cerita',
+                question: 'Dalam tes pilihan ganda matematika, Budi berhasil menjawab benar $82\\%$ dari seluruh soal. Bentuk pecahan desimal dari persentase jawaban benar Budi adalah ...',
+                options: [
+                    { key: 'A', text: '$8,2$' },
+                    { key: 'B', text: '$0,082$' },
+                    { key: 'C', text: '$0,82$' },
+                    { key: 'D', text: '$82,0$' }
+                ],
+                correctKey: 'C',
+                explanation: 'Persen berarti perseratus, sehingga:<br>$$82\\% = \\frac{82}{100} = 0,82$$'
+            },
+            {
+                id: 5,
+                type: 'direct',
+                typeLabel: 'Soal Langsung',
+                question: 'Bentuk pecahan biasa paling sederhana dari desimal $0,375$ adalah ...',
+                options: [
+                    { key: 'A', text: '$\\frac{3}{8}$' },
+                    { key: 'B', text: '$\\frac{3}{4}$' },
+                    { key: 'C', text: '$\\frac{7}{20}$' },
+                    { key: 'D', text: '$\\frac{15}{40}$' }
+                ],
+                correctKey: 'A',
+                explanation: 'Desimal 3 angka di belakang koma berarti perseribu, lalu sederhanakan dengan membagi $125$:<br>$$0,375 = \\frac{375}{1000} = \\frac{375 \\div 125}{1000 \\div 125} = \\frac{3}{8}$$'
+            },
+            {
+                id: 6,
+                type: 'story',
+                typeLabel: 'Soal Cerita',
+                question: 'Sebuah toko pakaian memberikan diskon sebesar $45\\%$ untuk semua produk jaket. Nyatakan besar diskon tersebut dalam bentuk pecahan biasa paling sederhana!',
+                options: [
+                    { key: 'A', text: '$\\frac{45}{100}$' },
+                    { key: 'B', text: '$\\frac{9}{10}$' },
+                    { key: 'C', text: '$\\frac{9}{20}$' },
+                    { key: 'D', text: '$\\frac{4}{5}$' }
+                ],
+                correctKey: 'C',
+                explanation: 'Tuliskan sebagai perseratus lalu sederhanakan dengan membagi pembilang dan penyebut dengan 5:<br>$$45\\% = \\frac{45}{100} = \\frac{45 \\div 5}{100 \\div 5} = \\frac{9}{20}$$'
+            },
+            {
+                id: 7,
+                type: 'direct',
+                typeLabel: 'Soal Langsung',
+                question: 'Ubah bilangan desimal $0,08$ menjadi bentuk persen!',
+                options: [
+                    { key: 'A', text: '$0,8\\%$' },
+                    { key: 'B', text: '$8\\%$' },
+                    { key: 'C', text: '$80\\%$' },
+                    { key: 'D', text: '$800\\%$' }
+                ],
+                correctKey: 'B',
+                explanation: 'Kalikan bilangan desimal dengan $100\\%$:<br>$$0,08 \\times 100\\% = 8\\%$$'
+            },
+            {
+                id: 8,
+                type: 'story',
+                typeLabel: 'Soal Cerita',
+                question: 'Santi menghabiskan waktu 3 jam dari total 24 jam sehari untuk belajar mandiri. Berapa persen waktu yang digunakan Santi untuk belajar mandiri?',
+                options: [
+                    { key: 'A', text: '$25\\%$' },
+                    { key: 'B', text: '$15\\%$' },
+                    { key: 'C', text: '$8\\%$' },
+                    { key: 'D', text: '$12,5\\%$' }
+                ],
+                correctKey: 'D',
+                explanation: 'Pecahan waktu belajar Santi adalah $\\frac{3}{24} = \\frac{1}{8}$.<br>Ubah ke persen:<br>$$\\frac{1}{8} \\times 100\\% = 12,5\\%$$'
+            },
+            {
+                id: 9,
+                type: 'direct',
+                typeLabel: 'Soal Langsung',
+                question: 'Bentuk pecahan campuran dari pecahan tidak murni $\\frac{29}{6}$ adalah ...',
+                options: [
+                    { key: 'A', text: '$4\\frac{5}{6}$' },
+                    { key: 'B', text: '$4\\frac{1}{6}$' },
+                    { key: 'C', text: '$5\\frac{1}{6}$' },
+                    { key: 'D', text: '$3\\frac{5}{6}$' }
+                ],
+                correctKey: 'A',
+                explanation: 'Bagi pembilang dengan penyebut: $29 \\div 6 = 4$ (sisa $5$).<br>Sehingga pecahan campurannya adalah $4\\frac{5}{6}$.'
+            },
+            {
+                id: 10,
+                type: 'story',
+                typeLabel: 'Soal Cerita',
+                question: 'Pak Heru menanami $0,65$ bagian dari kebun miliknya dengan tanaman jagung. Tuliskan luas bagian tanah yang ditanami jagung dalam bentuk persen!',
+                options: [
+                    { key: 'A', text: '$6,5\\%$' },
+                    { key: 'B', text: '$0,65\\%$' },
+                    { key: 'C', text: '$65\\%$' },
+                    { key: 'D', text: '$650\\%$' }
+                ],
+                correctKey: 'C',
+                explanation: 'Ubah desimal ke persen dengan mengalikan $100\\%$:<br>$$0,65 \\times 100\\% = 65\\%$$'
+            },
+            {
+                id: 11,
+                type: 'direct',
+                typeLabel: 'Soal Langsung',
+                question: 'Bentuk desimal dari $7,5\\%$ adalah ...',
+                options: [
+                    { key: 'A', text: '$0,75$' },
+                    { key: 'B', text: '$0,075$' },
+                    { key: 'C', text: '$0,0075$' },
+                    { key: 'D', text: '$7,5$' }
+                ],
+                correctKey: 'B',
+                explanation: 'Bagi $7,5$ dengan $100$ (geser koma dua kali ke kiri):<br>$$7,5\\% = \\frac{7,5}{100} = 0,075$$'
+            },
+            {
+                id: 12,
+                type: 'story',
+                typeLabel: 'Soal Cerita',
+                question: 'Sebuah tangki air terisi penuh hingga $\\frac{7}{10}$ bagian. Nyatakan kapasitas air dalam tangki tersebut dalam bentuk desimal dan persen berturut-turut!',
+                options: [
+                    { key: 'A', text: '$0,07$ dan $7\\%$' },
+                    { key: 'B', text: '$0,7$ dan $7\\%$' },
+                    { key: 'C', text: '$0,07$ dan $70\\%$' },
+                    { key: 'D', text: '$0,7$ dan $70\\%$' }
+                ],
+                correctKey: 'D',
+                explanation: '• Desimal: $\\frac{7}{10} = 0,7$<br>• Persen: $0,7 \\times 100\\% = 70\\%$'
+            },
+            {
+                id: 13,
+                type: 'direct',
+                typeLabel: 'Soal Langsung',
+                question: 'Ubah pecahan campuran $2\\frac{1}{4}$ menjadi bentuk desimal!',
+                options: [
+                    { key: 'A', text: '$2,14$' },
+                    { key: 'B', text: '$2,40$' },
+                    { key: 'C', text: '$2,25$' },
+                    { key: 'D', text: '$2,50$' }
+                ],
+                correctKey: 'C',
+                explanation: 'Pecahan $\\frac{1}{4} = 0,25$. Maka $2\\frac{1}{4} = 2 + 0,25 = 2,25$.'
+            },
+            {
+                id: 14,
+                type: 'story',
+                typeLabel: 'Soal Cerita',
+                question: 'Di dalam sangkar terdapat 15 ekor burung kakatua, dan 12 di antaranya sudah terlatih jinak. Berapa persen burung kakatua yang sudah jinak?',
+                options: [
+                    { key: 'A', text: '$80\\%$' },
+                    { key: 'B', text: '$75\\%$' },
+                    { key: 'C', text: '$60\\%$' },
+                    { key: 'D', text: '$85\\%$' }
+                ],
+                correctKey: 'A',
+                explanation: 'Pecahan bagian burung jinak: $\\frac{12}{15} = \\frac{4}{5}$.<br>Ubah ke persen:<br>$$\\frac{4}{5} \\times 100\\% = 80\\%$$'
+            },
+            {
+                id: 15,
+                type: 'direct',
+                typeLabel: 'Soal Langsung',
+                question: 'Bentuk pecahan biasa paling sederhana dari persen $64\\%$ adalah ...',
+                options: [
+                    { key: 'A', text: '$\\frac{32}{50}$' },
+                    { key: 'B', text: '$\\frac{8}{25}$' },
+                    { key: 'C', text: '$\\frac{12}{25}$' },
+                    { key: 'D', text: '$\\frac{16}{25}$' }
+                ],
+                correctKey: 'D',
+                explanation: 'Tulis $64\\%$ sebagai perseratus lalu bagi dengan FPB ($4$):<br>$$64\\% = \\frac{64}{100} = \\frac{64 \\div 4}{100 \\div 4} = \\frac{16}{25}$$'
+            },
+            {
+                id: 16,
+                type: 'story',
+                typeLabel: 'Soal Cerita',
+                question: 'Dodi mengisi daya baterai ponselnya hingga indikator menunjukkan angka $0,95$ dari kapasitas penuh. Tuliskan kondisi baterai ponsel Dodi dalam persen!',
+                options: [
+                    { key: 'A', text: '$9,5\\%$' },
+                    { key: 'B', text: '$95\\%$' },
+                    { key: 'C', text: '$0,95\\%$' },
+                    { key: 'D', text: '$950\\%$' }
+                ],
+                correctKey: 'B',
+                explanation: 'Konversi desimal ke persen:<br>$$0,95 \\times 100\\% = 95\\%$$'
+            },
+            {
+                id: 17,
+                type: 'direct',
+                typeLabel: 'Soal Langsung',
+                question: 'Ubah desimal $1,4$ menjadi bentuk pecahan campuran paling sederhana!',
+                options: [
+                    { key: 'A', text: '$1\\frac{4}{10}$' },
+                    { key: 'B', text: '$1\\frac{1}{4}$' },
+                    { key: 'C', text: '$1\\frac{2}{5}$' },
+                    { key: 'D', text: '$1\\frac{3}{5}$' }
+                ],
+                correctKey: 'C',
+                explanation: '$$1,4 = 1 + 0,4 = 1 + \\frac{4}{10} = 1 + \\frac{2}{5} = 1\\frac{2}{5}$$'
+            },
+            {
+                id: 18,
+                type: 'story',
+                typeLabel: 'Soal Cerita',
+                question: 'Panitia bakti sosial berhasil mengumpulkan dana sebesar $112\\%$ dari target awal. Nyatakan persentase dana tersebut dalam bentuk pecahan campuran paling sederhana!',
+                options: [
+                    { key: 'A', text: '$1\\frac{3}{25}$' },
+                    { key: 'B', text: '$1\\frac{12}{100}$' },
+                    { key: 'C', text: '$1\\frac{6}{25}$' },
+                    { key: 'D', text: '$1\\frac{3}{20}$' }
+                ],
+                correctKey: 'A',
+                explanation: '$$112\\% = \\frac{112}{100} = 1\\frac{12}{100} = 1\\frac{12 \\div 4}{100 \\div 4} = 1\\frac{3}{25}$$'
+            },
+            {
+                id: 19,
+                type: 'direct',
+                typeLabel: 'Soal Langsung',
+                question: 'Bentuk persen dari pecahan $\\frac{17}{20}$ adalah ...',
+                options: [
+                    { key: 'A', text: '$75\\%$' },
+                    { key: 'B', text: '$80\\%$' },
+                    { key: 'C', text: '$82\\%$' },
+                    { key: 'D', text: '$85\\%$' }
+                ],
+                correctKey: 'D',
+                explanation: 'Kalikan pecahan dengan $100\\%$:<br>$$\\frac{17}{20} \\times 100\\% = 17 \\times 5\\% = 85\\%$$'
+            },
+            {
+                id: 20,
+                type: 'story',
+                typeLabel: 'Soal Cerita',
+                question: 'Saat tes ketahanan fisik, Doni berhasil berlari sejauh $3,2$ km. Bentuk pecahan tidak murni paling sederhana dari jarak lari Doni adalah ...',
+                options: [
+                    { key: 'A', text: '$\\frac{32}{10}$' },
+                    { key: 'B', text: '$\\frac{16}{5}$' },
+                    { key: 'C', text: '$\\frac{8}{2,5}$' },
+                    { key: 'D', text: '$\\frac{32}{5}$' }
+                ],
+                correctKey: 'B',
+                explanation: '$$3,2 = \\frac{32}{10} = \\frac{32 \\div 2}{10 \\div 2} = \\frac{16}{5}$$'
+            },
+            {
+                id: 21,
+                type: 'direct',
+                typeLabel: 'Soal Langsung',
+                question: 'Ubah pecahan biasa $\\frac{5}{8}$ menjadi bentuk desimal!',
+                options: [
+                    { key: 'A', text: '$0,625$' },
+                    { key: 'B', text: '$0,58$' },
+                    { key: 'C', text: '$0,65$' },
+                    { key: 'D', text: '$0,85$' }
+                ],
+                correctKey: 'A',
+                explanation: 'Gunakan pembagian bersusun atau kalikan dengan $125$ agar penyebut jadi $1000$:<br>$$\\frac{5}{8} = \\frac{5 \\times 125}{8 \\times 125} = \\frac{625}{1000} = 0,625$$'
+            },
+            {
+                id: 22,
+                type: 'story',
+                typeLabel: 'Soal Cerita',
+                question: 'Seorang petani memanen padi dan menjual $0,48$ bagian dari total hasil panennya ke tengkulak. Berapakah bentuk pecahan biasa paling sederhana dari bagian panen yang dijual tersebut?',
+                options: [
+                    { key: 'A', text: '$\\frac{24}{50}$' },
+                    { key: 'B', text: '$\\frac{11}{25}$' },
+                    { key: 'C', text: '$\\frac{12}{25}$' },
+                    { key: 'D', text: '$\\frac{6}{12,5}$' }
+                ],
+                correctKey: 'C',
+                explanation: '$$0,48 = \\frac{48}{100} = \\frac{48 \\div 4}{100 \\div 4} = \\frac{12}{25}$$'
+            },
+            {
+                id: 23,
+                type: 'direct',
+                typeLabel: 'Soal Langsung',
+                question: 'Bentuk desimal dari pecahan campuran $3\\frac{7}{50}$ adalah ...',
+                options: [
+                    { key: 'A', text: '$3,7$' },
+                    { key: 'B', text: '$3,14$' },
+                    { key: 'C', text: '$3,35$' },
+                    { key: 'D', text: '$3,07$' }
+                ],
+                correctKey: 'B',
+                explanation: 'Ubah $\\frac{7}{50}$ menjadi perseratus dengan mengalikan 2:<br>$$\\frac{7}{50} = \\frac{14}{100} = 0,14$$<br>Maka $3\\frac{7}{50} = 3 + 0,14 = 3,14$.'
+            },
+            {
+                id: 24,
+                type: 'story',
+                typeLabel: 'Soal Cerita',
+                question: 'Maya membuat es buah untuk acara keluarga. Sebanyak $28\\%$ dari volume isi mangkuk es buah adalah sirup melon. Nyatakan persentase sirup melon dalam bentuk desimal!',
+                options: [
+                    { key: 'A', text: '$2,8$' },
+                    { key: 'B', text: '$0,028$' },
+                    { key: 'C', text: '$0,280$' },
+                    { key: 'D', text: '$0,28$' }
+                ],
+                correctKey: 'D',
+                explanation: '$$28\\% = \\frac{28}{100} = 0,28$$'
+            },
+            {
+                id: 25,
+                type: 'direct',
+                typeLabel: 'Soal Langsung',
+                question: 'Ubah desimal $0,005$ menjadi bentuk persen!',
+                options: [
+                    { key: 'A', text: '$5\\%$' },
+                    { key: 'B', text: '$50\\%$' },
+                    { key: 'C', text: '$0,5\\%$' },
+                    { key: 'D', text: '$0,05\\%$' }
+                ],
+                correctKey: 'C',
+                explanation: 'Kalikan desimal dengan $100\\%$:<br>$$0,005 \\times 100\\% = 0,5\\%$$'
+            },
+            {
+                id: 26,
+                type: 'story',
+                typeLabel: 'Soal Cerita',
+                question: 'Pada pemilihan ketua OSIS, Asep memperoleh $36$ suara dari total $150$ suara sah. Tentukan bagian suara Asep dalam bentuk desimal!',
+                options: [
+                    { key: 'A', text: '$0,24$' },
+                    { key: 'B', text: '$0,36$' },
+                    { key: 'C', text: '$0,15$' },
+                    { key: 'D', text: '$0,20$' }
+                ],
+                correctKey: 'A',
+                explanation: 'Pecahan bagian suara Asep: $\\frac{36}{150}$. Sederhanakan dulu dengan membagi 3:<br>$$\\frac{36 \\div 3}{150 \\div 3} = \\frac{12}{50} = \\frac{24}{100} = 0,24$$'
+            },
+            {
+                id: 27,
+                type: 'direct',
+                typeLabel: 'Soal Langsung',
+                question: 'Bentuk pecahan biasa paling sederhana dari persen $15\\%$ adalah ...',
+                options: [
+                    { key: 'A', text: '$\\frac{15}{100}$' },
+                    { key: 'B', text: '$\\frac{3}{10}$' },
+                    { key: 'C', text: '$\\frac{1}{6}$' },
+                    { key: 'D', text: '$\\frac{3}{20}$' }
+                ],
+                correctKey: 'D',
+                explanation: '$$15\\% = \\frac{15}{100} = \\frac{15 \\div 5}{100 \\div 5} = \\frac{3}{20}$$'
+            },
+            {
+                id: 28,
+                type: 'story',
+                typeLabel: 'Soal Cerita',
+                question: 'Sebuah pabrik sepatu mengekspor $\\frac{19}{25}$ dari total produksi bulannya ke negara tetangga. Berapa persentase produk yang diekspor tersebut?',
+                options: [
+                    { key: 'A', text: '$72\\%$' },
+                    { key: 'B', text: '$76\\%$' },
+                    { key: 'C', text: '$78\\%$' },
+                    { key: 'D', text: '$80\\%$' }
+                ],
+                correctKey: 'B',
+                explanation: 'Ubah penyebut ke 100:<br>$$\\frac{19}{25} = \\frac{19 \\times 4}{25 \\times 4} = \\frac{76}{100} = 76\\%$$'
+            },
+            {
+                id: 29,
+                type: 'direct',
+                typeLabel: 'Soal Langsung',
+                question: 'Bentuk persen dari pecahan campuran $2\\frac{3}{10}$ adalah ...',
+                options: [
+                    { key: 'A', text: '$230\\%$' },
+                    { key: 'B', text: '$203\\%$' },
+                    { key: 'C', text: '$23\\%$' },
+                    { key: 'D', text: '$320\\%$' }
+                ],
+                correctKey: 'A',
+                explanation: '1) Ubah ke pecahan biasa: $2\\frac{3}{10} = \\frac{23}{10}$<br>2) Ubah ke persen:<br>$$\\frac{23}{10} \\times 100\\% = 230\\%$$'
+            },
+            {
+                id: 30,
+                type: 'story',
+                typeLabel: 'Soal Cerita',
+                question: 'Sebanyak $0,04$ bagian bibit tanaman hias di persemaian teridentifikasi layu. Nyatakan bagian bibit yang layu tersebut dalam bentuk pecahan biasa paling sederhana!',
+                options: [
+                    { key: 'A', text: '$\\frac{1}{20}$' },
+                    { key: 'B', text: '$\\frac{4}{10}$' },
+                    { key: 'C', text: '$\\frac{1}{25}$' },
+                    { key: 'D', text: '$\\frac{2}{25}$' }
+                ],
+                correctKey: 'C',
+                explanation: '$$0,04 = \\frac{4}{100} = \\frac{4 \\div 4}{100 \\div 4} = \\frac{1}{25}$$'
+            }
+        ];
+
+        // Global State
+        const STORAGE_KEY = 'MATEMATIKA_QUIZ_PEC_DES_PER_STATE';
+        let currentIndex = 0;
+        let userAnswers = {}; // { questionId: selectedOptionKey }
+        let currentFilter = 'all';
+
+        // Load saved progress from Local Storage
+        function loadState() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    userAnswers = parsed.userAnswers || {};
+                    currentIndex = typeof parsed.currentIndex === 'number' ? parsed.currentIndex : 0;
+                    showSaveStatusNotification();
+                }
+            } catch (e) {
+                console.error('Failed to load local storage state:', e);
+            }
+        }
+
+        // Save progress to Local Storage
+        function saveState() {
+            try {
+                const payload = {
+                    userAnswers: userAnswers,
+                    currentIndex: currentIndex,
+                    lastUpdated: new Date().toISOString()
+                };
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+                showSaveStatusNotification();
+            } catch (e) {
+                console.error('Failed to save to local storage:', e);
+            }
+        }
+
+        function showSaveStatusNotification() {
+            const statusEl = document.getElementById('save-status');
+            if (statusEl) {
+                statusEl.classList.remove('hidden');
+                statusEl.classList.add('flex');
+            }
+        }
+
+        // Render current question
+        function renderCurrentQuestion() {
+            const q = questionsData[currentIndex];
+
+            // Update Badges & Headers
+            document.getElementById('q-number-badge').innerText = `Soal ${currentIndex + 1} dari 30`;
+            
+            const typeBadge = document.getElementById('q-type-badge');
+            typeBadge.innerHTML = q.type === 'story' 
+                ? `<i data-lucide="book-open-text" class="w-3.5 h-3.5"></i> <span>Soal Cerita</span>`
+                : `<i data-lucide="zap" class="w-3.5 h-3.5"></i> <span>Soal Langsung</span>`;
+            
+            typeBadge.className = q.type === 'story'
+                ? 'bg-amber-100 text-amber-900 text-xs font-bold px-3 py-1 rounded-xl border border-amber-200/60 flex items-center space-x-1'
+                : 'bg-blue-100 text-blue-900 text-xs font-bold px-3 py-1 rounded-xl border border-blue-200/60 flex items-center space-x-1';
+
+            // Question Text
+            document.getElementById('q-text').innerHTML = q.question;
+
+            // Options Container
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = '';
+
+            const userChoice = userAnswers[q.id];
+            const isAnswered = userChoice !== undefined;
+
+            q.options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                
+                let btnClasses = "w-full text-left p-4 rounded-2xl border font-medium text-base transition flex items-center justify-between group cursor-pointer ";
+
+                if (!isAnswered) {
+                    btnClasses += "border-slate-200 bg-white hover:border-indigo-400 hover:bg-indigo-50/50 text-slate-800 shadow-sm";
+                    btn.onclick = () => selectAnswer(q.id, opt.key);
+                } else {
+                    // Lock options after answer
+                    btn.disabled = true;
+                    btn.classList.add("cursor-default");
+
+                    if (opt.key === q.correctKey) {
+                        // Highlight correct answer always
+                        btnClasses += "border-emerald-500 bg-emerald-50 text-emerald-900 font-bold ring-2 ring-emerald-400/40";
+                    } else if (opt.key === userChoice && userChoice !== q.correctKey) {
+                        // Highlight wrong choice selected by user
+                        btnClasses += "border-rose-400 bg-rose-50 text-rose-900 font-bold ring-2 ring-rose-300/40";
+                    } else {
+                        // Unselected other options
+                        btnClasses += "border-slate-200 bg-slate-50 text-slate-400 opacity-60";
+                    }
+                }
+
+                btn.className = btnClasses;
+
+                // Option content
+                let badgeClass = "w-8 h-8 rounded-xl flex items-center justify-center font-bold text-sm shrink-0 mr-3 transition ";
+                if (!isAnswered) {
+                    badgeClass += "bg-slate-100 text-slate-600 group-hover:bg-indigo-600 group-hover:text-white";
+                } else if (opt.key === q.correctKey) {
+                    badgeClass += "bg-emerald-600 text-white";
+                } else if (opt.key === userChoice && userChoice !== q.correctKey) {
+                    badgeClass += "bg-rose-600 text-white";
+                } else {
+                    badgeClass += "bg-slate-200 text-slate-500";
+                }
+
+                btn.innerHTML = `
+                    <div class="flex items-center">
+                        <span class="${badgeClass}">${opt.key}</span>
+                        <span class="text-base font-semibold">${opt.text}</span>
+                    </div>
+                    ${isAnswered && opt.key === q.correctKey ? '<i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-600 ml-2 shrink-0"></i>' : ''}
+                    ${isAnswered && opt.key === userChoice && userChoice !== q.correctKey ? '<i data-lucide="x-circle" class="w-5 h-5 text-rose-600 ml-2 shrink-0"></i>' : ''}
+                `;
+
+                optionsContainer.appendChild(btn);
+            });
+
+            // Question status tag
+            const statusTag = document.getElementById('q-status-tag');
+            if (!isAnswered) {
+                statusTag.className = "text-xs font-bold px-3 py-1 rounded-full bg-slate-100 text-slate-600 flex items-center space-x-1";
+                statusTag.innerHTML = `<i data-lucide="clock" class="w-3.5 h-3.5"></i> <span>Belum dijawab</span>`;
+            } else if (userChoice === q.correctKey) {
+                statusTag.className = "text-xs font-bold px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 flex items-center space-x-1";
+                statusTag.innerHTML = `<i data-lucide="check" class="w-3.5 h-3.5"></i> <span>Jawaban Benar</span>`;
+            } else {
+                statusTag.className = "text-xs font-bold px-3 py-1 rounded-full bg-rose-100 text-rose-800 flex items-center space-x-1";
+                statusTag.innerHTML = `<i data-lucide="x" class="w-3.5 h-3.5"></i> <span>Jawaban Salah</span>`;
+            }
+
+            // Explanation panel visibility
+            const expPanel = document.getElementById('explanation-panel');
+            const expIconBox = document.getElementById('exp-icon-box');
+            const expIcon = document.getElementById('exp-icon');
+            const expTitle = document.getElementById('exp-title');
+            const expBadge = document.getElementById('exp-badge');
+            const expContent = document.getElementById('exp-content');
+
+            if (isAnswered) {
+                expPanel.classList.remove('hidden');
+                if (userChoice === q.correctKey) {
+                    expPanel.className = "mt-6 p-5 rounded-2xl border transition-all duration-300 bg-emerald-50/90 border-emerald-200";
+                    expIconBox.className = "p-2 rounded-xl text-white shrink-0 mt-0.5 bg-emerald-600";
+                    expIcon.setAttribute('data-lucide', 'check');
+                    expTitle.innerText = "Jawaban Kamu Tepat!";
+                    expTitle.className = "font-bold text-base text-emerald-900";
+                    expBadge.innerText = "BENAR";
+                    expBadge.className = "text-xs font-extrabold px-2.5 py-0.5 rounded-full bg-emerald-200 text-emerald-800";
+                } else {
+                    expPanel.className = "mt-6 p-5 rounded-2xl border transition-all duration-300 bg-rose-50/90 border-rose-200";
+                    expIconBox.className = "p-2 rounded-xl text-white shrink-0 mt-0.5 bg-rose-600";
+                    expIcon.setAttribute('data-lucide', 'alert-circle');
+                    expTitle.innerText = "Jawaban Kurang Tepat";
+                    expTitle.className = "font-bold text-base text-rose-900";
+                    expBadge.innerText = `KUNCI JAWABAN: ${q.correctKey}`;
+                    expBadge.className = "text-xs font-extrabold px-2.5 py-0.5 rounded-full bg-rose-200 text-rose-800";
+                }
+                expContent.innerHTML = q.explanation;
+            } else {
+                expPanel.classList.add('hidden');
+            }
+
+            // Update Prev/Next buttons
+            document.getElementById('btn-prev').disabled = currentIndex === 0;
+            document.getElementById('btn-next').disabled = currentIndex === questionsData.length - 1;
+
+            // Re-render math and icons
+            renderMathInElement(document.body, {
+                delimiters: [
+                    {left: '$$', right: '$$', display: true},
+                    {left: '$', right: '$', display: false}
+                ]
+            });
+            lucide.createIcons();
+
+            // Refresh grid & global counters
+            updateGridNav();
+            updateHeaderStats();
+        }
+
+        // Answer selection handler
+        function selectAnswer(questionId, selectedKey) {
+            if (userAnswers[questionId] !== undefined) return; // Prevent re-answer
+            userAnswers[questionId] = selectedKey;
+            saveState();
+            renderCurrentQuestion();
+        }
+
+        // Navigation helpers
+        function nextQuestion() {
+            if (currentIndex < questionsData.length - 1) {
+                currentIndex++;
+                saveState();
+                renderCurrentQuestion();
+            }
+        }
+
+        function prevQuestion() {
+            if (currentIndex > 0) {
+                currentIndex--;
+                saveState();
+                renderCurrentQuestion();
+            }
+        }
+
+        function jumpToQuestion(index) {
+            currentIndex = index;
+            saveState();
+            renderCurrentQuestion();
+        }
+
+        // Filter Grid Navigation
+        function setGridFilter(filter) {
+            currentFilter = filter;
+            ['all', 'unanswered', 'story', 'direct'].forEach(f => {
+                const btn = document.getElementById('filter-' + f);
+                if (f === filter) {
+                    btn.className = "flex-1 py-1.5 rounded-lg bg-white text-slate-800 font-bold shadow-sm transition";
+                } else {
+                    btn.className = "flex-1 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition font-medium";
+                }
+            });
+            updateGridNav();
+        }
+
+        // Update Question Grid Buttons
+        function updateGridNav() {
+            const grid = document.getElementById('question-grid');
+            grid.innerHTML = '';
+
+            let answeredCount = 0;
+
+            questionsData.forEach((q, idx) => {
+                const userChoice = userAnswers[q.id];
+                const isAnswered = userChoice !== undefined;
+                if (isAnswered) answeredCount++;
+
+                // Apply filter
+                let passFilter = true;
+                if (currentFilter === 'unanswered' && isAnswered) passFilter = false;
+                if (currentFilter === 'story' && q.type !== 'story') passFilter = false;
+                if (currentFilter === 'direct' && q.type !== 'direct') passFilter = false;
+
+                if (!passFilter) return;
+
+                const btn = document.createElement('button');
+                btn.type = 'button';
+
+                let btnClasses = "h-10 rounded-xl font-bold text-xs flex items-center justify-center transition shadow-sm relative ";
+
+                if (idx === currentIndex) {
+                    btnClasses += "ring-2 ring-indigo-600 ring-offset-2 z-10 ";
+                }
+
+                if (!isAnswered) {
+                    btnClasses += "bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300/80";
+                } else if (userChoice === q.correctKey) {
+                    btnClasses += "bg-emerald-500 hover:bg-emerald-600 text-white";
+                } else {
+                    btnClasses += "bg-rose-500 hover:bg-rose-600 text-white";
+                }
+
+                btn.className = btnClasses;
+                btn.innerText = idx + 1;
+                btn.onclick = () => jumpToQuestion(idx);
+
+                grid.appendChild(btn);
+            });
+
+            document.getElementById('answered-count-badge').innerText = `${answeredCount} / 30 Selesai`;
+        }
+
+        // Header Stats Calculation
+        function updateHeaderStats() {
+            const totalQuestions = questionsData.length;
+            const answeredKeys = Object.keys(userAnswers);
+            const answeredCount = answeredKeys.length;
+
+            let correctCount = 0;
+            questionsData.forEach(q => {
+                if (userAnswers[q.id] === q.correctKey) {
+                    correctCount++;
+                }
+            });
+
+            // Calculate score scaled to 100
+            const calculatedScore = Math.round((correctCount / totalQuestions) * 100);
+
+            document.getElementById('header-score').innerText = calculatedScore;
+            document.getElementById('header-progress').innerText = `${answeredCount} / ${totalQuestions}`;
+
+            const percentProgress = (answeredCount / totalQuestions) * 100;
+            document.getElementById('top-progress-bar').style.width = `${percentProgress}%`;
+        }
+
+        // Summary Modal & Results
+        function openSummaryModal() {
+            const totalQuestions = questionsData.length;
+            let correctCount = 0;
+            let wrongCount = 0;
+            let unansweredCount = 0;
+
+            let directTotal = 0, directCorrect = 0;
+            let storyTotal = 0, storyCorrect = 0;
+
+            questionsData.forEach(q => {
+                const userChoice = userAnswers[q.id];
+                if (q.type === 'direct') directTotal++;
+                if (q.type === 'story') storyTotal++;
+
+                if (userChoice === undefined) {
+                    unansweredCount++;
+                } else if (userChoice === q.correctKey) {
+                    correctCount++;
+                    if (q.type === 'direct') directCorrect++;
+                    if (q.type === 'story') storyCorrect++;
+                } else {
+                    wrongCount++;
+                }
+            });
+
+            const finalScore = Math.round((correctCount / totalQuestions) * 100);
+
+            document.getElementById('modal-score').innerText = finalScore;
+            document.getElementById('modal-correct').innerText = correctCount;
+            document.getElementById('modal-wrong').innerText = wrongCount;
+            document.getElementById('modal-unanswered').innerText = unansweredCount;
+
+            // Performance Breakdown
+            const directPercent = directTotal > 0 ? Math.round((directCorrect / directTotal) * 100) : 0;
+            const storyPercent = storyTotal > 0 ? Math.round((storyCorrect / storyTotal) * 100) : 0;
+
+            document.getElementById('perf-direct-text').innerText = `${directCorrect}/${directTotal} (${directPercent}%)`;
+            document.getElementById('perf-direct-bar').style.width = `${directPercent}%`;
+
+            document.getElementById('perf-story-text').innerText = `${storyCorrect}/${storyTotal} (${storyPercent}%)`;
+            document.getElementById('perf-story-bar').style.width = `${storyPercent}%`;
+
+            // Encouragement message
+            const msgEl = document.getElementById('modal-feedback-message');
+            if (finalScore >= 85) {
+                msgEl.className = "p-4 rounded-2xl text-sm font-medium text-center bg-emerald-50 text-emerald-900 border border-emerald-200";
+                msgEl.innerHTML = "🌟 <strong>Luar Biasa!</strong> Pemahaman kamu tentang konversi pecahan, desimal, dan persen sudah sangat matang!";
+                confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+            } else if (finalScore >= 60) {
+                msgEl.className = "p-4 rounded-2xl text-sm font-medium text-center bg-amber-50 text-amber-900 border border-amber-200";
+                msgEl.innerHTML = "👍 <strong>Bagus!</strong> Kamu sudah memahami dasar konversi dengan baik. Pelajari lagi soal-soal yang belum tepat!";
+            } else {
+                msgEl.className = "p-4 rounded-2xl text-sm font-medium text-center bg-indigo-50 text-indigo-900 border border-indigo-200";
+                msgEl.innerHTML = "💪 <strong>Tetap Semangat!</strong> Periksa pembahasan langkah demi langkah pada soal yang salah untuk memperkuat pemahamanmu.";
+            }
+
+            document.getElementById('summary-modal').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function closeSummaryModal() {
+            document.getElementById('summary-modal').classList.add('hidden');
+        }
+
+        // Reset Modal Handlers
+        function openResetModal() {
+            document.getElementById('reset-modal').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function closeResetModal() {
+            document.getElementById('reset-modal').classList.add('hidden');
+        }
+
+        function confirmResetQuiz() {
+            userAnswers = {};
+            currentIndex = 0;
+            localStorage.removeItem(STORAGE_KEY);
+            closeResetModal();
+            closeSummaryModal();
+            renderCurrentQuestion();
+        }
+
+        // Keyboard Navigation Controls
+        document.addEventListener('keydown', function(e) {
+            if (document.getElementById('summary-modal').classList.contains('hidden') && 
+                document.getElementById('reset-modal').classList.contains('hidden')) {
+                if (e.key === 'ArrowRight') nextQuestion();
+                if (e.key === 'ArrowLeft') prevQuestion();
+            }
+        });
+
+        // Initialize on Load
+        window.onload = function() {
+            loadState();
+            renderCurrentQuestion();
+        };
+    </script>
+</body>
+</html>
